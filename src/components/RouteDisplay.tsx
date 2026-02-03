@@ -8,7 +8,12 @@ import {
   Bus,
   MapPin,
   Flag,
-  CornerDownRight
+  CornerDownRight,
+  CornerUpLeft,
+  CornerUpRight,
+  RotateCw,
+  ArrowUp,
+  MoveRight
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -27,6 +32,125 @@ const categoryLabels: Record<string, { label: string; color: string }> = {
   'rentree': { label: 'Rentrée au dépôt', color: 'bg-primary text-primary-foreground' },
   'inter-ligne': { label: 'Déplacement inter-lignes', color: 'bg-accent text-accent-foreground' },
 };
+
+// Fonction pour détecter le type de direction dans une étape
+function getDirectionType(text: string): 'left' | 'right' | 'roundabout' | 'straight' | 'uturn' | 'none' {
+  const lowerText = text.toLowerCase();
+  
+  // Détection giratoire/rond-point
+  if (lowerText.includes('giratoire') || lowerText.includes('rond-point') || lowerText.includes('roundabout')) {
+    return 'roundabout';
+  }
+  
+  // Détection demi-tour
+  if (lowerText.includes('1/2 tour') || lowerText.includes('demi-tour') || lowerText.includes('demi tour') || lowerText.includes('faire demi-tour')) {
+    return 'uturn';
+  }
+  
+  // Détection à gauche
+  if (lowerText.includes('à gauche') || lowerText.includes('tourner à gauche') || lowerText.includes('partir à gauche') || lowerText.includes('prendre à gauche')) {
+    return 'left';
+  }
+  
+  // Détection à droite
+  if (lowerText.includes('à droite') || lowerText.includes('tourner à droite') || lowerText.includes('descendre à droite') || lowerText.includes('prendre à droite')) {
+    return 'right';
+  }
+  
+  // Détection tout droit
+  if (lowerText.includes('tout droit') || lowerText.includes('continuer') || lowerText.includes('poursuivre')) {
+    return 'straight';
+  }
+  
+  return 'none';
+}
+
+// Composant pour l'icône de direction
+function DirectionIcon({ type }: { type: 'left' | 'right' | 'roundabout' | 'straight' | 'uturn' | 'none' }) {
+  switch (type) {
+    case 'left':
+      return (
+        <div className="flex items-center gap-1 text-primary">
+          <CornerUpLeft className="w-4 h-4" />
+          <span className="text-xs font-medium">Gauche</span>
+        </div>
+      );
+    case 'right':
+      return (
+        <div className="flex items-center gap-1 text-primary">
+          <CornerUpRight className="w-4 h-4" />
+          <span className="text-xs font-medium">Droite</span>
+        </div>
+      );
+    case 'roundabout':
+      return (
+        <div className="flex items-center gap-1 text-accent-foreground">
+          <RotateCw className="w-4 h-4" />
+          <span className="text-xs font-medium">Giratoire</span>
+        </div>
+      );
+    case 'uturn':
+      return (
+        <div className="flex items-center gap-1 text-warning">
+          <RotateCw className="w-4 h-4 rotate-180" />
+          <span className="text-xs font-medium">Demi-tour</span>
+        </div>
+      );
+    case 'straight':
+      return (
+        <div className="flex items-center gap-1 text-muted-foreground">
+          <ArrowUp className="w-4 h-4" />
+          <span className="text-xs font-medium">Tout droit</span>
+        </div>
+      );
+    default:
+      return null;
+  }
+}
+
+// Fonction pour formater le texte avec mise en évidence des directions
+function formatStepText(text: string): React.ReactNode {
+  const lowerText = text.toLowerCase();
+  
+  // Liste des patterns à mettre en évidence
+  const patterns = [
+    { regex: /(tourner à gauche|à gauche|partir à gauche)/gi, class: 'text-primary font-semibold' },
+    { regex: /(tourner à droite|à droite|descendre à droite)/gi, class: 'text-primary font-semibold' },
+    { regex: /(giratoire|rond-point)/gi, class: 'text-accent-foreground font-semibold' },
+    { regex: /(1\/2 tour|demi-tour|demi tour|faire demi-tour)/gi, class: 'text-warning font-semibold' },
+    { regex: /(tout droit|continuer tout droit)/gi, class: 'text-muted-foreground font-medium' },
+  ];
+  
+  let result = text;
+  
+  // On retourne le texte tel quel mais avec les parties importantes en gras via HTML
+  return <span dangerouslySetInnerHTML={{ __html: highlightDirections(text) }} />;
+}
+
+function highlightDirections(text: string): string {
+  let result = text;
+  
+  // Remplacer les patterns par des spans colorés
+  const replacements: [RegExp, string][] = [
+    [/(tourner à gauche)/gi, '<span class="text-primary font-semibold">← $1</span>'],
+    [/(partir à gauche)/gi, '<span class="text-primary font-semibold">← $1</span>'],
+    [/(à gauche)(?! )/gi, '<span class="text-primary font-semibold">← $1</span>'],
+    [/(tourner à droite)/gi, '<span class="text-primary font-semibold">→ $1</span>'],
+    [/(descendre à droite)/gi, '<span class="text-primary font-semibold">→ $1</span>'],
+    [/(à droite)(?! )/gi, '<span class="text-primary font-semibold">→ $1</span>'],
+    [/(au giratoire|giratoire)/gi, '<span class="text-accent-foreground font-semibold">↻ $1</span>'],
+    [/(rond-point)/gi, '<span class="text-accent-foreground font-semibold">↻ $1</span>'],
+    [/(1\/2 tour)/gi, '<span class="text-warning font-semibold">↩ $1</span>'],
+    [/(demi-tour|demi tour|faire demi-tour)/gi, '<span class="text-warning font-semibold">↩ $1</span>'],
+    [/(continuer tout droit|tout droit)/gi, '<span class="text-muted-foreground font-medium">↑ $1</span>'],
+  ];
+  
+  for (const [pattern, replacement] of replacements) {
+    result = result.replace(pattern, replacement);
+  }
+  
+  return result;
+}
 
 export function RouteDisplay({ route }: RouteDisplayProps) {
   if (!route) {
@@ -80,6 +204,28 @@ export function RouteDisplay({ route }: RouteDisplayProps) {
         </div>
       </div>
 
+      {/* Légende des symboles */}
+      <div className="px-4 py-2 bg-muted/50 border-b border-border">
+        <div className="flex flex-wrap items-center gap-4 text-xs">
+          <span className="text-muted-foreground font-medium">Légende:</span>
+          <span className="flex items-center gap-1">
+            <span className="text-primary">←</span> Gauche
+          </span>
+          <span className="flex items-center gap-1">
+            <span className="text-primary">→</span> Droite
+          </span>
+          <span className="flex items-center gap-1">
+            <span className="text-accent-foreground">↻</span> Giratoire
+          </span>
+          <span className="flex items-center gap-1">
+            <span className="text-warning">↩</span> Demi-tour
+          </span>
+          <span className="flex items-center gap-1">
+            <span className="text-muted-foreground">↑</span> Tout droit
+          </span>
+        </div>
+      </div>
+
       {/* Itinéraire détaillé */}
       <div className="p-4">
         <h4 className="font-display font-semibold text-foreground mb-4 flex items-center gap-2">
@@ -94,6 +240,46 @@ export function RouteDisplay({ route }: RouteDisplayProps) {
           {route.itinerary.map((step, index) => {
             const isFirst = index === 0;
             const isLast = index === route.itinerary.length - 1;
+            const directionType = getDirectionType(step.direction);
+            
+            // Déterminer l'icône à afficher
+            const getStepIcon = () => {
+              if (isFirst) return <MapPin className="w-4 h-4" />;
+              if (isLast) return <Flag className="w-4 h-4 text-accent-foreground" />;
+              
+              switch (directionType) {
+                case 'left':
+                  return <CornerUpLeft className="w-4 h-4 text-primary" />;
+                case 'right':
+                  return <CornerUpRight className="w-4 h-4 text-primary" />;
+                case 'roundabout':
+                  return <RotateCw className="w-4 h-4 text-accent-foreground" />;
+                case 'uturn':
+                  return <RotateCw className="w-4 h-4 text-warning rotate-180" />;
+                case 'straight':
+                  return <ArrowUp className="w-4 h-4 text-muted-foreground" />;
+                default:
+                  return <MoveRight className="w-4 h-4 text-muted-foreground" />;
+              }
+            };
+            
+            // Déterminer la couleur du cercle
+            const getCircleColor = () => {
+              if (isFirst) return 'bg-primary text-primary-foreground';
+              if (isLast) return 'bg-accent';
+              
+              switch (directionType) {
+                case 'left':
+                case 'right':
+                  return 'bg-primary/20 text-primary';
+                case 'roundabout':
+                  return 'bg-accent/50';
+                case 'uturn':
+                  return 'bg-warning/20';
+                default:
+                  return 'bg-secondary';
+              }
+            };
             
             return (
               <div 
@@ -104,16 +290,9 @@ export function RouteDisplay({ route }: RouteDisplayProps) {
                 {/* Indicateur de point */}
                 <div className={`
                   w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 z-10
-                  ${isFirst ? 'bg-primary text-primary-foreground' : 
-                    isLast ? 'bg-accent' : 'bg-secondary'}
+                  ${getCircleColor()}
                 `}>
-                  {isFirst ? (
-                    <MapPin className="w-4 h-4" />
-                  ) : isLast ? (
-                    <Flag className="w-4 h-4 text-accent-foreground" />
-                  ) : (
-                    <ChevronRight className="w-4 h-4 text-muted-foreground" />
-                  )}
+                  {getStepIcon()}
                 </div>
                 
                 {/* Texte de l'étape */}
@@ -123,7 +302,7 @@ export function RouteDisplay({ route }: RouteDisplayProps) {
                   transition-colors
                 `}>
                   <p className={`text-sm ${isFirst || isLast ? 'text-foreground' : 'text-foreground/80'}`}>
-                    {step.direction}
+                    {formatStepText(step.direction)}
                   </p>
                 </div>
               </div>
