@@ -122,40 +122,14 @@ function DirectionIcon({ type }: { type: 'left' | 'right' | 'roundabout' | 'stra
   );
 }
 
-// Fonction pour formater le texte avec mise en évidence des directions et images
-function formatStepText(text: string, images: { gauche: string; droite: string; droit: string; giratoire: string }): React.ReactNode {
-  // On retourne le texte tel quel mais avec les parties importantes en gras via HTML
-  return <span dangerouslySetInnerHTML={{ __html: highlightDirections(text, images) }} />;
+// Fonction pour formater le texte 
+function formatStepText(text: string): React.ReactNode {
+  return <span>{highlightDirections(text)}</span>;
 }
 
-function highlightDirections(text: string, images: { gauche: string; droite: string; droit: string; giratoire: string }): string {
-  let result = text;
-  
-  const imgStyle = 'width: 24px; height: 24px; display: inline-block; vertical-align: middle; margin-right: 4px;';
-  const rotateStyle = 'width: 24px; height: 24px; display: inline-block; vertical-align: middle; margin-right: 4px; transform: rotate(180deg);';
-  
-  // Remplacer les patterns de direction par les icônes uniquement (sans le texte)
-  const replacements: [RegExp, string][] = [
-    [/(tourner à gauche)/gi, `<img src="${images.gauche}" alt="Tourner à gauche" style="${imgStyle}"/>`],
-    [/(partir à gauche)/gi, `<img src="${images.gauche}" alt="Partir à gauche" style="${imgStyle}"/>`],
-    [/(prendre à gauche)/gi, `<img src="${images.gauche}" alt="Prendre à gauche" style="${imgStyle}"/>`],
-    [/(à gauche)(?![a-zA-Z])/gi, `<img src="${images.gauche}" alt="À gauche" style="${imgStyle}"/>`],
-    [/(tourner à droite)/gi, `<img src="${images.droite}" alt="Tourner à droite" style="${imgStyle}"/>`],
-    [/(descendre à droite)/gi, `<img src="${images.droite}" alt="Descendre à droite" style="${imgStyle}"/>`],
-    [/(prendre à droite)/gi, `<img src="${images.droite}" alt="Prendre à droite" style="${imgStyle}"/>`],
-    [/(à droite)(?![a-zA-Z])/gi, `<img src="${images.droite}" alt="À droite" style="${imgStyle}"/>`],
-    [/(au giratoire|giratoire)/gi, `<img src="${images.giratoire}" alt="Giratoire" style="${imgStyle}"/>`],
-    [/(rond-point)/gi, `<img src="${images.giratoire}" alt="Rond-point" style="${imgStyle}"/>`],
-    [/(1\/2 tour)/gi, `<img src="${images.gauche}" alt="Demi-tour" style="${rotateStyle}"/>`],
-    [/(demi-tour|demi tour|faire demi-tour)/gi, `<img src="${images.gauche}" alt="Demi-tour" style="${rotateStyle}"/>`],
-    [/(continuer tout droit|tout droit)/gi, `<img src="${images.droit}" alt="Tout droit" style="${imgStyle}"/>`],
-  ];
-  
-  for (const [pattern, replacement] of replacements) {
-    result = result.replace(pattern, replacement);
-  }
-  
-  return result;
+function highlightDirections(text: string): string {
+  // Retourne le texte tel quel, sans icônes
+  return text;
 }
 
 export function RouteDisplay({ route }: RouteDisplayProps) {
@@ -210,27 +184,6 @@ export function RouteDisplay({ route }: RouteDisplayProps) {
         </div>
       </div>
 
-      {/* Légende des symboles avec images */}
-      <div className="px-4 py-3 bg-muted/50 border-b border-border">
-        <div className="flex flex-wrap items-center gap-4 text-xs">
-          <span className="text-muted-foreground font-medium">Légende:</span>
-          <span className="flex items-center gap-1.5">
-            <img src={iconGauche} alt="Gauche" className="w-6 h-6 animate-bounce-in" style={{ animationDelay: '100ms' }} /> Gauche
-          </span>
-          <span className="flex items-center gap-1.5">
-            <img src={iconDroite} alt="Droite" className="w-6 h-6 animate-bounce-in" style={{ animationDelay: '200ms' }} /> Droite
-          </span>
-          <span className="flex items-center gap-1.5">
-            <img src={iconGiratoire} alt="Giratoire" className="w-6 h-6 animate-bounce-in" style={{ animationDelay: '300ms' }} /> Giratoire
-          </span>
-          <span className="flex items-center gap-1.5">
-            <img src={iconGauche} alt="Demi-tour" className="w-6 h-6 rotate-180 animate-bounce-in" style={{ animationDelay: '400ms' }} /> Demi-tour
-          </span>
-          <span className="flex items-center gap-1.5">
-            <img src={iconDroit} alt="Tout droit" className="w-6 h-6 animate-bounce-in" style={{ animationDelay: '500ms' }} /> Tout droit
-          </span>
-        </div>
-      </div>
 
       {/* Itinéraire détaillé */}
       <div className="p-4">
@@ -246,16 +199,11 @@ export function RouteDisplay({ route }: RouteDisplayProps) {
           {route.itinerary.map((step, index) => {
             const isFirst = index === 0;
             const isLast = index === route.itinerary.length - 1;
-            const directionType = getDirectionType(step.direction);
             
             // Déterminer l'icône à afficher
             const getStepIcon = () => {
               if (isFirst) return <MapPin className="w-4 h-4" />;
               if (isLast) return <Flag className="w-4 h-4 text-accent-foreground" />;
-              
-              if (directionType !== 'none') {
-                return <DirectionImage type={directionType} size="md" animate={true} delay={index * 80} />;
-              }
               return <MoveRight className="w-4 h-4 text-muted-foreground" />;
             };
             
@@ -263,18 +211,7 @@ export function RouteDisplay({ route }: RouteDisplayProps) {
             const getCircleColor = () => {
               if (isFirst) return 'bg-primary text-primary-foreground';
               if (isLast) return 'bg-accent';
-              
-              switch (directionType) {
-                case 'left':
-                case 'right':
-                  return 'bg-primary/20 text-primary';
-                case 'roundabout':
-                  return 'bg-accent/50';
-                case 'uturn':
-                  return 'bg-warning/20';
-                default:
-                  return 'bg-secondary';
-              }
+              return 'bg-secondary';
             };
             
             return (
@@ -298,7 +235,7 @@ export function RouteDisplay({ route }: RouteDisplayProps) {
                   transition-colors
                 `}>
                   <p className={`text-sm ${isFirst || isLast ? 'text-foreground' : 'text-foreground/80'}`}>
-                    {formatStepText(step.direction, { gauche: iconGauche, droite: iconDroite, droit: iconDroit, giratoire: iconGiratoire })}
+                    {formatStepText(step.direction)}
                   </p>
                 </div>
               </div>
