@@ -46,6 +46,10 @@
     --success: 142 70% 45%;
     --success-foreground: 0 0% 100%;
     
+    /* Avertissement - Orange foncé */
+    --warning: 35 95% 50%;
+    --warning-foreground: 0 0% 100%;
+    
     /* États */
     --destructive: 0 85% 55%;
     --destructive-foreground: 0 0% 100%;
@@ -107,6 +111,9 @@
     
     --success: 142 60% 50%;
     --success-foreground: 0 0% 100%;
+    
+    --warning: 35 90% 55%;
+    --warning-foreground: 0 0% 100%;
     
     --destructive: 0 75% 50%;
     --destructive-foreground: 0 0% 100%;
