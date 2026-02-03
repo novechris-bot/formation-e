@@ -131,24 +131,24 @@ function formatStepText(text: string, images: { gauche: string; droite: string; 
 function highlightDirections(text: string, images: { gauche: string; droite: string; droit: string; giratoire: string }): string {
   let result = text;
   
-  const imgStyle = 'width: 20px; height: 20px; display: inline-block; vertical-align: middle; margin-right: 4px;';
-  const rotateStyle = 'width: 20px; height: 20px; display: inline-block; vertical-align: middle; margin-right: 4px; transform: rotate(180deg);';
+  const imgStyle = 'width: 24px; height: 24px; display: inline-block; vertical-align: middle; margin-right: 4px;';
+  const rotateStyle = 'width: 24px; height: 24px; display: inline-block; vertical-align: middle; margin-right: 4px; transform: rotate(180deg);';
   
-  // Remplacer les patterns par des spans avec images
+  // Remplacer les patterns de direction par les icônes uniquement (sans le texte)
   const replacements: [RegExp, string][] = [
-    [/(tourner à gauche)/gi, `<span class="text-primary font-semibold inline-flex items-center"><img src="${images.gauche}" alt="←" style="${imgStyle}"/>$1</span>`],
-    [/(partir à gauche)/gi, `<span class="text-primary font-semibold inline-flex items-center"><img src="${images.gauche}" alt="←" style="${imgStyle}"/>$1</span>`],
-    [/(prendre à gauche)/gi, `<span class="text-primary font-semibold inline-flex items-center"><img src="${images.gauche}" alt="←" style="${imgStyle}"/>$1</span>`],
-    [/(à gauche)(?![a-zA-Z])/gi, `<span class="text-primary font-semibold inline-flex items-center"><img src="${images.gauche}" alt="←" style="${imgStyle}"/>$1</span>`],
-    [/(tourner à droite)/gi, `<span class="text-primary font-semibold inline-flex items-center"><img src="${images.droite}" alt="→" style="${imgStyle}"/>$1</span>`],
-    [/(descendre à droite)/gi, `<span class="text-primary font-semibold inline-flex items-center"><img src="${images.droite}" alt="→" style="${imgStyle}"/>$1</span>`],
-    [/(prendre à droite)/gi, `<span class="text-primary font-semibold inline-flex items-center"><img src="${images.droite}" alt="→" style="${imgStyle}"/>$1</span>`],
-    [/(à droite)(?![a-zA-Z])/gi, `<span class="text-primary font-semibold inline-flex items-center"><img src="${images.droite}" alt="→" style="${imgStyle}"/>$1</span>`],
-    [/(au giratoire|giratoire)/gi, `<span class="font-semibold inline-flex items-center"><img src="${images.giratoire}" alt="↻" style="${imgStyle}"/>$1</span>`],
-    [/(rond-point)/gi, `<span class="font-semibold inline-flex items-center"><img src="${images.giratoire}" alt="↻" style="${imgStyle}"/>$1</span>`],
-    [/(1\/2 tour)/gi, `<span class="text-warning font-semibold inline-flex items-center"><img src="${images.gauche}" alt="↩" style="${rotateStyle}"/>$1</span>`],
-    [/(demi-tour|demi tour|faire demi-tour)/gi, `<span class="text-warning font-semibold inline-flex items-center"><img src="${images.gauche}" alt="↩" style="${rotateStyle}"/>$1</span>`],
-    [/(continuer tout droit|tout droit)/gi, `<span class="text-muted-foreground font-medium inline-flex items-center"><img src="${images.droit}" alt="↑" style="${imgStyle}"/>$1</span>`],
+    [/(tourner à gauche)/gi, `<img src="${images.gauche}" alt="Tourner à gauche" style="${imgStyle}"/>`],
+    [/(partir à gauche)/gi, `<img src="${images.gauche}" alt="Partir à gauche" style="${imgStyle}"/>`],
+    [/(prendre à gauche)/gi, `<img src="${images.gauche}" alt="Prendre à gauche" style="${imgStyle}"/>`],
+    [/(à gauche)(?![a-zA-Z])/gi, `<img src="${images.gauche}" alt="À gauche" style="${imgStyle}"/>`],
+    [/(tourner à droite)/gi, `<img src="${images.droite}" alt="Tourner à droite" style="${imgStyle}"/>`],
+    [/(descendre à droite)/gi, `<img src="${images.droite}" alt="Descendre à droite" style="${imgStyle}"/>`],
+    [/(prendre à droite)/gi, `<img src="${images.droite}" alt="Prendre à droite" style="${imgStyle}"/>`],
+    [/(à droite)(?![a-zA-Z])/gi, `<img src="${images.droite}" alt="À droite" style="${imgStyle}"/>`],
+    [/(au giratoire|giratoire)/gi, `<img src="${images.giratoire}" alt="Giratoire" style="${imgStyle}"/>`],
+    [/(rond-point)/gi, `<img src="${images.giratoire}" alt="Rond-point" style="${imgStyle}"/>`],
+    [/(1\/2 tour)/gi, `<img src="${images.gauche}" alt="Demi-tour" style="${rotateStyle}"/>`],
+    [/(demi-tour|demi tour|faire demi-tour)/gi, `<img src="${images.gauche}" alt="Demi-tour" style="${rotateStyle}"/>`],
+    [/(continuer tout droit|tout droit)/gi, `<img src="${images.droit}" alt="Tout droit" style="${imgStyle}"/>`],
   ];
   
   for (const [pattern, replacement] of replacements) {
