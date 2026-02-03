@@ -18,10 +18,10 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 
-// Import des images de direction
-import iconGauche from "@/assets/A_Gauche.png";
-import iconDroite from "@/assets/A_droite.png";
-import iconDroit from "@/assets/Droit.png";
+// Import des images de direction (nouvelles icônes de panneaux routiers)
+import iconGauche from "@/assets/Tourner_a_gauche.png";
+import iconDroite from "@/assets/Tourner_a_droite.png";
+import iconDroit from "@/assets/Tout_droit.png";
 import iconGiratoire from "@/assets/Giratoire.png";
 
 interface RouteDisplayProps {
@@ -66,25 +66,36 @@ function getDirectionType(text: string): 'left' | 'right' | 'roundabout' | 'stra
   return 'none';
 }
 
-// Composant pour l'image de direction
-function DirectionImage({ type, size = "sm" }: { type: 'left' | 'right' | 'roundabout' | 'straight' | 'uturn' | 'none', size?: "sm" | "md" | "lg" }) {
+// Composant pour l'image de direction avec animation
+function DirectionImage({ type, size = "sm", animate = false, delay = 0 }: { 
+  type: 'left' | 'right' | 'roundabout' | 'straight' | 'uturn' | 'none', 
+  size?: "sm" | "md" | "lg",
+  animate?: boolean,
+  delay?: number
+}) {
   const sizeClasses = {
-    sm: "w-5 h-5",
-    md: "w-6 h-6",
-    lg: "w-8 h-8"
+    sm: "w-6 h-6",
+    md: "w-8 h-8",
+    lg: "w-10 h-10"
   };
+
+  const animationClass = animate 
+    ? "animate-bounce-in opacity-0" 
+    : "";
+
+  const style = animate ? { animationDelay: `${delay}ms`, animationFillMode: 'forwards' } : {};
 
   switch (type) {
     case 'left':
-      return <img src={iconGauche} alt="Tourner à gauche" className={sizeClasses[size]} />;
+      return <img src={iconGauche} alt="Tourner à gauche" className={`${sizeClasses[size]} ${animationClass}`} style={style} />;
     case 'right':
-      return <img src={iconDroite} alt="Tourner à droite" className={sizeClasses[size]} />;
+      return <img src={iconDroite} alt="Tourner à droite" className={`${sizeClasses[size]} ${animationClass}`} style={style} />;
     case 'roundabout':
-      return <img src={iconGiratoire} alt="Giratoire" className={sizeClasses[size]} />;
+      return <img src={iconGiratoire} alt="Giratoire" className={`${sizeClasses[size]} ${animationClass}`} style={style} />;
     case 'straight':
-      return <img src={iconDroit} alt="Tout droit" className={sizeClasses[size]} />;
+      return <img src={iconDroit} alt="Tout droit" className={`${sizeClasses[size]} ${animationClass}`} style={style} />;
     case 'uturn':
-      return <img src={iconGauche} alt="Demi-tour" className={`${sizeClasses[size]} rotate-180`} />;
+      return <img src={iconGauche} alt="Demi-tour" className={`${sizeClasses[size]} rotate-180 ${animationClass}`} style={style} />;
     default:
       return null;
   }
@@ -204,19 +215,19 @@ export function RouteDisplay({ route }: RouteDisplayProps) {
         <div className="flex flex-wrap items-center gap-4 text-xs">
           <span className="text-muted-foreground font-medium">Légende:</span>
           <span className="flex items-center gap-1.5">
-            <img src={iconGauche} alt="Gauche" className="w-5 h-5" /> Gauche
+            <img src={iconGauche} alt="Gauche" className="w-6 h-6 animate-bounce-in" style={{ animationDelay: '100ms' }} /> Gauche
           </span>
           <span className="flex items-center gap-1.5">
-            <img src={iconDroite} alt="Droite" className="w-5 h-5" /> Droite
+            <img src={iconDroite} alt="Droite" className="w-6 h-6 animate-bounce-in" style={{ animationDelay: '200ms' }} /> Droite
           </span>
           <span className="flex items-center gap-1.5">
-            <img src={iconGiratoire} alt="Giratoire" className="w-5 h-5" /> Giratoire
+            <img src={iconGiratoire} alt="Giratoire" className="w-6 h-6 animate-bounce-in" style={{ animationDelay: '300ms' }} /> Giratoire
           </span>
           <span className="flex items-center gap-1.5">
-            <img src={iconGauche} alt="Demi-tour" className="w-5 h-5 rotate-180" /> Demi-tour
+            <img src={iconGauche} alt="Demi-tour" className="w-6 h-6 rotate-180 animate-bounce-in" style={{ animationDelay: '400ms' }} /> Demi-tour
           </span>
           <span className="flex items-center gap-1.5">
-            <img src={iconDroit} alt="Tout droit" className="w-5 h-5" /> Tout droit
+            <img src={iconDroit} alt="Tout droit" className="w-6 h-6 animate-bounce-in" style={{ animationDelay: '500ms' }} /> Tout droit
           </span>
         </div>
       </div>
@@ -243,7 +254,7 @@ export function RouteDisplay({ route }: RouteDisplayProps) {
               if (isLast) return <Flag className="w-4 h-4 text-accent-foreground" />;
               
               if (directionType !== 'none') {
-                return <DirectionImage type={directionType} size="md" />;
+                return <DirectionImage type={directionType} size="md" animate={true} delay={index * 80} />;
               }
               return <MoveRight className="w-4 h-4 text-muted-foreground" />;
             };
