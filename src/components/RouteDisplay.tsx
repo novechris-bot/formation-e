@@ -122,14 +122,20 @@ function DirectionIcon({ type }: { type: 'left' | 'right' | 'roundabout' | 'stra
   );
 }
 
-// Fonction pour formater le texte 
+// Fonction pour formater le texte avec icônes de direction
 function formatStepText(text: string): React.ReactNode {
-  return <span>{highlightDirections(text)}</span>;
-}
-
-function highlightDirections(text: string): string {
-  // Retourne le texte tel quel, sans icônes
-  return text;
+  const directionType = getDirectionType(text);
+  
+  if (directionType === 'none') {
+    return <span>{text}</span>;
+  }
+  
+  return (
+    <div className="flex items-center gap-2">
+      <DirectionImage type={directionType} size="sm" animate={true} />
+      <span>{text}</span>
+    </div>
+  );
 }
 
 export function RouteDisplay({ route }: RouteDisplayProps) {
