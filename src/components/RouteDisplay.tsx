@@ -1,7 +1,6 @@
 import { HLPRoute } from "@/data/hlpRoutes";
 import { 
   ArrowRight, 
-  ChevronRight, 
   Info, 
   AlertCircle,
   Bus,
@@ -18,12 +17,6 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 
-// Import des images de direction (nouvelles icônes de panneaux routiers)
-import iconGauche from "@/assets/Tourner_a_gauche.png";
-import iconDroite from "@/assets/Tourner_a_droite.png";
-import iconDroit from "@/assets/Tout_droit.png";
-import iconGiratoire from "@/assets/Giratoire.png";
-
 interface RouteDisplayProps {
   route: HLPRoute | null;
 }
@@ -34,105 +27,59 @@ const categoryLabels: Record<string, { label: string; color: string }> = {
   'inter-ligne': { label: 'Déplacement inter-lignes', color: 'bg-accent text-accent-foreground' },
 };
 
-// Fonction pour détecter le type de direction dans une étape
-function getDirectionType(text: string): 'left' | 'right' | 'roundabout' | 'straight' | 'uturn' | 'none' {
+// Fonction pour détecter et formater le type de direction dans une étape
+function getDirectionInstruction(text: string): { instruction: string; hasDirection: boolean } {
   const lowerText = text.toLowerCase();
   
   // Détection giratoire/rond-point
-  if (lowerText.includes('giratoire') || lowerText.includes('rond-point') || lowerText.includes('roundabout')) {
-    return 'roundabout';
+  if (lowerText.includes('giratoire') || lowerText.includes('rond-point')) {
+    return { instruction: '🔄 Giratoire', hasDirection: true };
   }
   
   // Détection demi-tour
-  if (lowerText.includes('1/2 tour') || lowerText.includes('demi-tour') || lowerText.includes('demi tour') || lowerText.includes('faire demi-tour')) {
-    return 'uturn';
+  if (lowerText.includes('1/2 tour') || lowerText.includes('demi-tour') || lowerText.includes('demi tour')) {
+    return { instruction: '↩️ Demi-tour', hasDirection: true };
   }
   
-  // Détection à gauche
-  if (lowerText.includes('à gauche') || lowerText.includes('tourner à gauche') || lowerText.includes('partir à gauche') || lowerText.includes('prendre à gauche')) {
-    return 'left';
+  // Détection à gauche (tourner)
+  if (lowerText.includes('tourner à gauche') || lowerText.includes('prendre à gauche')) {
+    return { instruction: '⬅️ Tourner à gauche', hasDirection: true };
   }
   
-  // Détection à droite
-  if (lowerText.includes('à droite') || lowerText.includes('tourner à droite') || lowerText.includes('descendre à droite') || lowerText.includes('prendre à droite')) {
-    return 'right';
+  // Détection à gauche (autres)
+  if (lowerText.includes('à gauche')) {
+    return { instruction: '⬅️ À gauche', hasDirection: true };
+  }
+  
+  // Détection à droite (tourner/descendre)
+  if (lowerText.includes('tourner à droite') || lowerText.includes('descendre à droite') || lowerText.includes('prendre à droite')) {
+    return { instruction: '➡️ Tourner à droite', hasDirection: true };
+  }
+  
+  // Détection à droite (autres)
+  if (lowerText.includes('à droite')) {
+    return { instruction: '➡️ À droite', hasDirection: true };
   }
   
   // Détection tout droit
   if (lowerText.includes('tout droit') || lowerText.includes('continuer') || lowerText.includes('poursuivre')) {
-    return 'straight';
+    return { instruction: '⬆️ Tout droit', hasDirection: true };
   }
   
-  return 'none';
+  return { instruction: '', hasDirection: false };
 }
 
-// Composant pour l'image de direction avec animation
-function DirectionImage({ type, size = "sm", animate = false, delay = 0 }: { 
-  type: 'left' | 'right' | 'roundabout' | 'straight' | 'uturn' | 'none', 
-  size?: "sm" | "md" | "lg",
-  animate?: boolean,
-  delay?: number
-}) {
-  const sizeClasses = {
-    sm: "w-6 h-6",
-    md: "w-8 h-8",
-    lg: "w-10 h-10"
-  };
-
-  const animationClass = animate 
-    ? "animate-bounce-in opacity-0" 
-    : "";
-
-  const style = animate ? { animationDelay: `${delay}ms`, animationFillMode: 'forwards' } : {};
-
-  switch (type) {
-    case 'left':
-      return <img src={iconGauche} alt="Tourner à gauche" className={`${sizeClasses[size]} ${animationClass}`} style={style} />;
-    case 'right':
-      return <img src={iconDroite} alt="Tourner à droite" className={`${sizeClasses[size]} ${animationClass}`} style={style} />;
-    case 'roundabout':
-      return <img src={iconGiratoire} alt="Giratoire" className={`${sizeClasses[size]} ${animationClass}`} style={style} />;
-    case 'straight':
-      return <img src={iconDroit} alt="Tout droit" className={`${sizeClasses[size]} ${animationClass}`} style={style} />;
-    case 'uturn':
-      return <img src={iconGauche} alt="Demi-tour" className={`${sizeClasses[size]} rotate-180 ${animationClass}`} style={style} />;
-    default:
-      return null;
-  }
-}
-
-// Composant pour l'icône de direction avec label
-function DirectionIcon({ type }: { type: 'left' | 'right' | 'roundabout' | 'straight' | 'uturn' | 'none' }) {
-  const labels = {
-    left: "Gauche",
-    right: "Droite", 
-    roundabout: "Giratoire",
-    straight: "Tout droit",
-    uturn: "Demi-tour",
-    none: ""
-  };
-
-  if (type === 'none') return null;
-
-  return (
-    <div className="flex items-center gap-1">
-      <DirectionImage type={type} size="sm" />
-      <span className="text-xs font-medium">{labels[type]}</span>
-    </div>
-  );
-}
-
-// Fonction pour formater le texte avec icônes de direction
+// Fonction pour formater le texte avec instruction de direction textuelle
 function formatStepText(text: string): React.ReactNode {
-  const directionType = getDirectionType(text);
+  const { instruction, hasDirection } = getDirectionInstruction(text);
   
-  if (directionType === 'none') {
+  if (!hasDirection) {
     return <span>{text}</span>;
   }
   
   return (
-    <div className="flex items-center gap-2">
-      <DirectionImage type={directionType} size="sm" animate={true} />
+    <div className="flex flex-col gap-1">
+      <span className="text-xs font-semibold text-primary">{instruction}</span>
       <span>{text}</span>
     </div>
   );
